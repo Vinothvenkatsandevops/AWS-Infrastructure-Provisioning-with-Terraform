@@ -1,0 +1,18 @@
+# Actual Terraform Project Workflow
+
+sudo -i
+mkdir Arch
+cd Arch
+vi arch.tf
+
+terraform init
+terraform plan
+terraform apply
+
+# Verification
+terraform show
+terraform state list
+terraform state show aws_lb.lb
+
+# Cleanup
+terraform destroy
