@@ -1,229 +1,236 @@
 # 🚀 AWS Infrastructure Provisioning with Terraform
 
-Provision a complete, production-style AWS network and compute stack — VPC, public subnets, an EC2 web server, and an Application Load Balancer — entirely as code using Terraform.
+Provision AWS infrastructure using Terraform, including a custom VPC, public subnets, an EC2 web server, and an Application Load Balancer (ALB).
+
+This project was created and deployed **from an AWS EC2 server acting as the Terraform control server**. Instead of running Terraform from a local laptop, the Terraform configuration was created and executed directly on the EC2 server using Terraform CLI commands.
 
 ---
 
 # 📖 Project Overview
 
-This project uses Terraform to provision a highly available web-facing infrastructure on AWS. It builds a custom VPC with two public subnets across separate Availability Zones, launches an EC2 instance running Apache (httpd), and fronts it with an Application Load Balancer (ALB) that distributes incoming traffic to the backend instance through a target group.
+This project demonstrates how to provision AWS infrastructure using Terraform as Infrastructure as Code (IaC).
 
-The repository is intended for beginners and aspiring DevOps/Cloud Engineers who want hands-on experience provisioning real AWS infrastructure as code, instead of clicking through the console.
+The infrastructure includes:
 
----
+* Custom VPC
+* Two public subnets across different Availability Zones
+* Internet Gateway
+* Public route table
+* EC2 instance running Apache (`httpd`)
+* Security groups
+* Application Load Balancer (ALB)
+* Target group
+* HTTP listener
 
-# 🎯 Project Objectives
-
-- Define AWS infrastructure declaratively using Terraform (Infrastructure as Code)
-- Provision a custom VPC with public subnets across multiple Availability Zones
-- Configure an Internet Gateway and route tables for public internet access
-- Launch an EC2 instance and bootstrap it with a web server using `user_data`
-- Apply least-privilege security groups (separate rules for the load balancer and the EC2 instance)
-- Provision an Application Load Balancer (ALB), target group, and listener
-- Register the EC2 instance with the target group and verify traffic flow end-to-end
-
----
-
-# 🏗️ Architecture
-
-```
-                    Internet
-                        │
-                        ▼
-          Application Load Balancer (ALB)
-              (Public Subnets, 2 AZs)
-                        │
-                        ▼
-              Target Group (HTTP:80)
-                        │
-                        ▼
-                  EC2 Instance
-              (Apache / httpd, t2.micro)
-                        │
-                        ▼
-                Public Subnet (AZ-a)
-
-  VPC: 10.0.0.0/16
-  ├── Public Subnet 1: 10.0.1.0/24 (us-east-1a)
-  └── Public Subnet 2: 10.0.2.0/24 (us-east-1b)
-  Internet Gateway ── Route Table ── Subnet Associations
-```
+The entire infrastructure was provisioned using Terraform commands executed from an AWS EC2 server.
 
 ---
 
-# 🛠 Technologies Used
+# 🖥️ Terraform Control Server
 
-| Technology | Purpose |
-|---|---|
-| Terraform | Infrastructure as Code — provisioning and lifecycle management |
-| AWS VPC | Isolated network environment |
-| AWS Internet Gateway | Public internet connectivity for the VPC |
-| AWS Subnets | Public subnets across two Availability Zones |
-| AWS Route Table | Routes outbound traffic to the Internet Gateway |
-| AWS EC2 | Web server instance (Apache/httpd) |
-| AWS Security Groups | Network-level access control for EC2 and the ALB |
-| AWS Application Load Balancer | Distributes HTTP traffic to backend targets |
-| AWS Target Group | Health-checks and routes traffic to registered EC2 instances |
+For this project, an AWS EC2 instance was used as the **Terraform control server**.
 
----
+The workflow was:
 
-# 📁 Repository Structure
-
-```
-aws-terraform-infra-provisioning/
-├── README.md
-├── main.tf
-├── variables.tf          (optional — for parameterizing region, CIDR, instance type)
-├── outputs.tf            (optional — for ALB DNS name, instance IP, etc.)
-├── .gitignore
-└── diagrams/
-    └── architecture.png
+```text
+AWS EC2 Server
+      │
+      │ Terraform CLI
+      ▼
+Terraform Configuration
+      │
+      ▼
+AWS Provider
+      │
+      ▼
+AWS Infrastructure
+ ┌────┴─────────────────────────┐
+ │                              │
+ ▼                              ▼
+VPC                         Application
+ │                         Load Balancer
+ ├── Public Subnet 1            │
+ ├── Public Subnet 2            ▼
+ ├── Internet Gateway       Target Group
+ └── Route Table                 │
+                                 ▼
+                              EC2 Web Server
+                              Apache/httpd
 ```
 
----
-
-# ⚙️ Prerequisites
-
-Before running this project, ensure you have:
-
-- An AWS account with an IAM user/role that has permissions for VPC, EC2, and ELB
-- An EC2 instance (e.g., Amazon Linux) to use as your Terraform control/management server
-- Terraform installed on that EC2 instance
-- AWS CLI installed and configured (`aws configure`) on the same instance, with valid access keys
-- A valid AMI ID for your target region (the AMI in this project is region-specific — update it if deploying outside `us-east-1`)
+The EC2 server was used only as the **Terraform management/control node**. Terraform executed the configuration from this server and provisioned the required AWS resources.
 
 ---
 
-# 🚀 Quick Start
+# ⚙️ Project Setup
 
-This project was built and run directly from an AWS EC2 server acting as the Terraform control node (rather than a local machine).
+After connecting to the AWS EC2 server through SSH, I created a directory to store the Terraform configuration.
 
-Launch an EC2 instance and connect to it via SSH, then install Terraform and the AWS CLI on it.
-
-Create a working directory for the project:
+### 1. Create a project directory
 
 ```bash
 mkdir dir_name
 cd dir_name
 ```
 
-Create the Terraform configuration file:
+### 2. Create the Terraform configuration file
+
+I created the Terraform configuration file using the `vi` editor:
 
 ```bash
 vi filename.tf
 ```
 
-Paste in the configuration, save, and exit (`Esc` → `:wq`).
+The Terraform configuration was then added to this file and saved using:
 
-Run the Terraform lifecycle commands one by one:
+```text
+Esc
+:wq
+```
+
+### 3. Initialize Terraform
+
+After creating the configuration file, I initialized Terraform:
 
 ```bash
 terraform init
+```
+
+This initialized the Terraform working directory and downloaded the required AWS provider.
+
+### 4. Review the execution plan
+
+Next, I checked what resources Terraform would create:
+
+```bash
 terraform plan
+```
+
+Terraform displayed the planned AWS infrastructure changes before making any modifications.
+
+### 5. Provision the infrastructure
+
+I then applied the Terraform configuration:
+
+```bash
 terraform apply
 ```
 
-Type `yes` when prompted to confirm.
+Terraform displayed the resources that would be created and asked for confirmation.
+
+I entered:
+
+```text
+yes
+```
+
+Terraform then provisioned the AWS infrastructure.
 
 ---
 
 # 📋 Deployment Workflow
 
-1. Launch an EC2 instance to act as the Terraform control server, and connect via SSH
-2. Install Terraform and the AWS CLI on the control server, then configure AWS credentials
-3. Create a project directory (`mkdir dir_name`) and a Terraform configuration file (`vi filename.tf`)
-4. Terraform initializes the AWS provider (`us-east-1`)
-5. Creates a VPC (`10.0.0.0/16`)
-6. Creates an Internet Gateway and attaches it to the VPC
-7. Creates 2 public subnets across `us-east-1a` and `us-east-1b`
-8. Creates a public route table with a default route (`0.0.0.0/0`) to the Internet Gateway, and associates both subnets with it
-9. Creates two security groups:
-   - `lb-sg` — allows inbound HTTP (80) from the internet
-   - `ec2-sg` — allows inbound SSH (22) from anywhere and HTTP (80) only from the load balancer's security group
-10. Launches an EC2 instance in the first public subnet, bootstrapped via `user_data` to install and start Apache (`httpd`), serving a simple "Hello from Terraform" page
-11. Provisions an Application Load Balancer across both public subnets
-12. Creates a target group and an HTTP listener on port 80, forwarding traffic to the target group
-13. Registers the EC2 instance with the target group
+The complete workflow followed in this project was:
 
----
-
-# ✅ Verification Commands
-
-Check what Terraform created:
+1. Launch an AWS EC2 instance to act as the Terraform control server.
+2. Connect to the EC2 server using SSH.
+3. Install and configure Terraform and the AWS CLI.
+4. Configure AWS credentials on the Terraform server.
+5. Create a project directory:
 
 ```bash
-terraform show
+mkdir dir_name
+cd dir_name
 ```
 
-List all resources in state:
+6. Create the Terraform configuration file:
 
 ```bash
-terraform state list
+vi filename.tf
 ```
 
-Get the ALB's public DNS name:
+7. Add the Terraform configuration and save the file.
+8. Initialize the Terraform project:
 
 ```bash
-terraform state show aws_lb.lb
+terraform init
 ```
 
-Or, if an `outputs.tf` is configured:
+9. Review the infrastructure changes:
 
 ```bash
-terraform output
+terraform plan
 ```
 
----
+10. Provision the AWS infrastructure:
 
-# 🌐 Access the Application
-
-Once `terraform apply` completes, retrieve the ALB's DNS name from the AWS Console (EC2 → Load Balancers) or via `terraform output`, then open it in a browser:
-
-```
-http://<alb-dns-name>
+```bash
+terraform apply
 ```
 
-Expected output:
+11. Confirm the deployment by entering:
 
+```text
+yes
 ```
-Hello from Terraform
-```
 
----
-
-# 🧹 Cleanup
-
-To avoid ongoing AWS charges, destroy all resources once you're done:
+12. Verify the resources created by Terraform.
+13. Access the application through the Application Load Balancer DNS name.
+14. Destroy the infrastructure after completing the project:
 
 ```bash
 terraform destroy
 ```
 
-Type `yes` when prompted. Always confirm in the AWS Console that the VPC, EC2 instance, and Load Balancer have been removed.
+---
+
+# 🔄 Terraform Workflow
+
+The project demonstrates the standard Terraform lifecycle:
+
+```text
+                 Terraform Control Server
+                         │
+                         ▼
+                  filename.tf
+                         │
+                         ▼
+                  terraform init
+                         │
+                         ▼
+                  terraform plan
+                         │
+                         ▼
+                 terraform apply
+                         │
+                         ▼
+                  AWS Infrastructure
+                         │
+                         ▼
+                    Verification
+                         │
+                         ▼
+                 terraform destroy
+```
 
 ---
 
-# 🛠 Troubleshooting
+# 🎯 Key Learning
 
-Common issues covered in this project:
+Through this project, I gained hands-on experience with:
 
-- **ALB shows "unhealthy" target** — verify the security group on the EC2 instance allows inbound HTTP from the ALB's security group, and confirm Apache is running (`systemctl status httpd`)
-- **Website not loading** — check that the target group's health check path returns a `200` response, and that the instance is in a public subnet with a route to the Internet Gateway
-- **`terraform apply` fails on AMI** — AMI IDs are region-specific; replace the AMI ID if deploying outside `us-east-1`
-- **SSH connection refused** — confirm port 22 is open in `ec2-sg` and that you're using the correct key pair
+* Running Terraform from an AWS EC2 server
+* Creating Terraform configuration files using the Linux `vi` editor
+* Using the Terraform CLI
+* Understanding the `init → plan → apply → destroy` workflow
+* Provisioning AWS infrastructure using Infrastructure as Code
+* Creating and configuring VPC networking
+* Deploying EC2 instances using Terraform
+* Configuring security groups
+* Creating an Application Load Balancer
+* Connecting an ALB to an EC2 target through a target group
+* Verifying infrastructure created by Terraform
 
----
-
-# 📚 Learning Outcomes
-
-After completing this project, you will understand:
-
-- Core Terraform workflow: `init`, `plan`, `apply`, `destroy`
-- How to structure a VPC with public subnets across multiple Availability Zones
-- How security groups control traffic between a load balancer and backend instances
-- How an Application Load Balancer, target group, and listener work together
-- How to bootstrap an EC2 instance at launch using `user_data`
-- Infrastructure as Code principles: repeatability, version control, and state management
 
 ---
 
@@ -242,4 +249,5 @@ After completing this project, you will understand:
 # 👨‍💻 Author
 
 **Vinoth V**
+
 DevOps | AWS | Terraform | Kubernetes | Docker | Jenkins | Python
